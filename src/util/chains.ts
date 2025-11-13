@@ -5,6 +5,10 @@ import {
   NativeCurrency,
   Token,
 } from '@uniswap/sdk-core';
+import { IMX_ZKEVM_TESTNET_RPC_URL } from './imx-testnet-constants';
+
+// Custom chain ID for IMX zkEVM Testnet (not in sdk-core)
+export const IMX_ZKEVM_TESTNET = 13473 as ChainId;
 
 // WIP: Gnosis, Moonbeam
 export const SUPPORTED_CHAINS: ChainId[] = [
@@ -33,6 +37,7 @@ export const SUPPORTED_CHAINS: ChainId[] = [
   ChainId.MONAD,
   ChainId.BASE_SEPOLIA,
   ChainId.SONEIUM,
+  IMX_ZKEVM_TESTNET,
   // Gnosis and Moonbeam don't yet have contracts deployed yet
 ];
 
@@ -177,6 +182,8 @@ export const ID_TO_CHAIN_ID = (id: number): ChainId => {
       return ChainId.UNICHAIN;
     case 1868:
       return ChainId.SONEIUM;
+    case 13473:
+      return IMX_ZKEVM_TESTNET;
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -212,6 +219,7 @@ export enum ChainName {
   MONAD_TESTNET = 'monad-testnet',
   SONEIUM = 'soneium-mainnet',
   MONAD = 'monad-mainnet',
+  IMX_ZKEVM_TESTNET = 'imx-zkevm-testnet',
 }
 
 export enum NativeCurrencyName {
@@ -224,6 +232,7 @@ export enum NativeCurrencyName {
   BNB = 'BNB',
   AVALANCHE = 'AVAX',
   MONAD = 'MON',
+  IMX = 'tIMX',
 }
 
 export const NATIVE_NAMES_BY_ID: { [chainId: number]: string[] } = {
@@ -342,6 +351,11 @@ export const NATIVE_NAMES_BY_ID: { [chainId: number]: string[] } = {
     'ETHER',
     '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
   ],
+  [IMX_ZKEVM_TESTNET]: [
+    'tIMX',
+    'IMX',
+    '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  ],
 };
 
 export const NATIVE_CURRENCY: { [chainId: number]: NativeCurrencyName } = {
@@ -373,6 +387,7 @@ export const NATIVE_CURRENCY: { [chainId: number]: NativeCurrencyName } = {
   [ChainId.BASE_SEPOLIA]: NativeCurrencyName.ETHER,
   [ChainId.UNICHAIN]: NativeCurrencyName.ETHER,
   [ChainId.SONEIUM]: NativeCurrencyName.ETHER,
+  [IMX_ZKEVM_TESTNET]: NativeCurrencyName.IMX,
 };
 
 export const ID_TO_NETWORK_NAME = (id: number): ChainName => {
@@ -435,6 +450,8 @@ export const ID_TO_NETWORK_NAME = (id: number): ChainName => {
       return ChainName.MONAD;
     case 1868:
       return ChainName.SONEIUM;
+    case 13473:
+      return ChainName.IMX_ZKEVM_TESTNET;
     default:
       throw new Error(`Unknown chain id: ${id}`);
   }
@@ -498,6 +515,8 @@ export const ID_TO_PROVIDER = (id: ChainId): string => {
       return process.env.JSON_RPC_PROVIDER_UNICHAIN!;
     case ChainId.SONEIUM:
       return process.env.JSON_RPC_PROVIDER_SONEIUM!;
+    case IMX_ZKEVM_TESTNET:
+      return IMX_ZKEVM_TESTNET_RPC_URL;
     default:
       throw new Error(`Chain id: ${id} not supported`);
   }
@@ -723,6 +742,13 @@ export const WRAPPED_NATIVE_CURRENCY: { [chainId in ChainId]: Token } = {
     'WETH',
     'Wrapped Ether'
   ),
+  [IMX_ZKEVM_TESTNET]: new Token(
+    13473,
+    '0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439',
+    18,
+    'WtIMX',
+    'Wrapped test-IMX'
+  ),
 };
 
 function isMatic(
@@ -897,6 +923,30 @@ class MonadNativeCurrency extends NativeCurrency {
   }
 }
 
+function isImx(chainId: number): chainId is typeof IMX_ZKEVM_TESTNET {
+  return chainId === IMX_ZKEVM_TESTNET;
+}
+
+class ImmutableXNativeCurrency extends NativeCurrency {
+  equals(other: Currency): boolean {
+    return other.isNative && other.chainId === this.chainId;
+  }
+
+  get wrapped(): Token {
+    if (!isImx(this.chainId)) throw new Error('Not IMX zkEVM');
+    const nativeCurrency = WRAPPED_NATIVE_CURRENCY[this.chainId];
+    if (nativeCurrency) {
+      return nativeCurrency;
+    }
+    throw new Error(`Does not support this chain ${this.chainId}`);
+  }
+
+  public constructor(chainId: number) {
+    if (!isImx(chainId)) throw new Error('Not IMX zkEVM');
+    super(chainId, 18, 'tIMX', 'test-IMX');
+  }
+}
+
 export class ExtendedEther extends Ether {
   public get wrapped(): Token {
     if (this.chainId in WRAPPED_NATIVE_CURRENCY) {
@@ -936,6 +986,8 @@ export function nativeOnChain(chainId: number): NativeCurrency {
     cachedNativeCurrency[chainId] = new AvalancheNativeCurrency(chainId);
   } else if (isMonad(chainId)) {
     cachedNativeCurrency[chainId] = new MonadNativeCurrency(chainId);
+  } else if (isImx(chainId)) {
+    cachedNativeCurrency[chainId] = new ImmutableXNativeCurrency(chainId);
   } else {
     cachedNativeCurrency[chainId] = ExtendedEther.onChain(chainId);
   }

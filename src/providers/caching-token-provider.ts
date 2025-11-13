@@ -1,7 +1,7 @@
 import { ChainId, Token } from '@uniswap/sdk-core';
 import _ from 'lodash';
 
-import { log, WRAPPED_NATIVE_CURRENCY } from '../util';
+import { IMX_ZKEVM_TESTNET, log, WRAPPED_NATIVE_CURRENCY } from '../util';
 
 import { ICache } from './cache';
 import {
@@ -62,9 +62,11 @@ import {
   WBTC_OPTIMISM_GOERLI,
   WBTC_OPTIMISM_SEPOLIA,
   WBTC_WORLDCHAIN,
+  WETH_IMX_ZKEVM_TESTNET,
   WLD_WORLDCHAIN,
   WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
+  WTIMX_IMX_ZKEVM_TESTNET,
 } from './token-provider';
 
 // These tokens will added to the Token cache on initialization.
@@ -210,6 +212,10 @@ export const CACHE_SEED_TOKENS: {
   [ChainId.SONEIUM]: {
     USDC: USDC_SONEIUM,
     WETH: WRAPPED_NATIVE_CURRENCY[ChainId.SONEIUM],
+  },
+  [IMX_ZKEVM_TESTNET]: {
+    WTIMX: WTIMX_IMX_ZKEVM_TESTNET,
+    WETH: WETH_IMX_ZKEVM_TESTNET,
   },
   // Currently we do not have providers for Moonbeam mainnet or Gnosis testnet
 };

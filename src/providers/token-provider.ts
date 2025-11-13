@@ -5,7 +5,7 @@ import { ChainId, Token } from '@uniswap/sdk-core';
 import _ from 'lodash';
 
 import { IERC20Metadata__factory } from '../types/v3/factories/IERC20Metadata__factory';
-import { log, WRAPPED_NATIVE_CURRENCY } from '../util';
+import { IMX_ZKEVM_TESTNET, log, WRAPPED_NATIVE_CURRENCY } from '../util';
 
 import { IMulticallProvider, Result } from './multicall-provider';
 import { ProviderConfig } from './provider';
@@ -811,6 +811,23 @@ export const USDC_SONEIUM = new Token(
   6,
   'USDCE',
   'Soneium Bridged USDC Soneium'
+);
+
+// IMX zkEVM Testnet tokens
+export const WTIMX_IMX_ZKEVM_TESTNET = new Token(
+  IMX_ZKEVM_TESTNET,
+  '0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439',
+  18,
+  'WtIMX',
+  'Wrapped test-IMX'
+);
+
+export const WETH_IMX_ZKEVM_TESTNET = new Token(
+  IMX_ZKEVM_TESTNET,
+  '0xe9E96d1aad82562b7588F03f49aD34186f996478',
+  18,
+  'WETH',
+  'Wrapped Ether'
 );
 
 export class TokenProvider implements ITokenProvider {
