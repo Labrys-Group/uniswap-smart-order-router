@@ -67,6 +67,7 @@ import {
   WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
   WTIMX_IMX_ZKEVM_TESTNET,
+  USDC_IMX_ZKEVM_TESTNET,
 } from './token-provider';
 
 // These tokens will added to the Token cache on initialization.
@@ -216,6 +217,7 @@ export const CACHE_SEED_TOKENS: {
   [IMX_ZKEVM_TESTNET]: {
     WTIMX: WTIMX_IMX_ZKEVM_TESTNET,
     WETH: WETH_IMX_ZKEVM_TESTNET,
+    USDC: USDC_IMX_ZKEVM_TESTNET,
   },
   // Currently we do not have providers for Moonbeam mainnet or Gnosis testnet
 };

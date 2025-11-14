@@ -830,6 +830,14 @@ export const WETH_IMX_ZKEVM_TESTNET = new Token(
   'Wrapped Ether'
 );
 
+export const USDC_IMX_ZKEVM_TESTNET = new Token(
+  IMX_ZKEVM_TESTNET,
+  '0x3B2d8A1931736Fc321C24864BceEe981B11c3c57',
+  6,
+  'USDC',
+  'USD Coin'
+);
+
 export class TokenProvider implements ITokenProvider {
   constructor(
     private chainId: ChainId,
