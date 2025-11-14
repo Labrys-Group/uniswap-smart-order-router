@@ -516,7 +516,7 @@ export const ID_TO_PROVIDER = (id: ChainId): string => {
     case ChainId.SONEIUM:
       return process.env.JSON_RPC_PROVIDER_SONEIUM!;
     case IMX_ZKEVM_TESTNET:
-      return IMX_ZKEVM_TESTNET_RPC_URL;
+      return process.env.JSON_RPC_PROVIDER_IMX_ZKEVM_TESTNET || IMX_ZKEVM_TESTNET_RPC_URL;
     default:
       throw new Error(`Chain id: ${id} not supported`);
   }

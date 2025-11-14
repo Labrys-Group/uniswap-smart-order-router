@@ -60,7 +60,19 @@ JSON_RPC_PROVIDER_CELO_ALFAJORES = '<JSON_RPC_PROVIDER>'
 JSON_RPC_PROVIDER_BNB = '<JSON_RPC_PROVIDER>'
 JSON_RPC_PROVIDER_AVALANCHE = '<JSON_RPC_PROVIDER>'
 JSON_RPC_PROVIDER_BASE = '<JSON_RPC_PROVIDER>'
+JSON_RPC_PROVIDER_IMX_ZKEVM_TESTNET = '<JSON_RPC_PROVIDER>' # Optional, defaults to https://rpc.testnet.immutable.com
 ```
+
+### IMX zkEVM Testnet Configuration
+
+For IMX zkEVM Testnet (Chain ID 13473), you can optionally configure:
+
+```
+JSON_RPC_PROVIDER_IMX_ZKEVM_TESTNET = '<JSON_RPC_PROVIDER>' # Defaults to https://rpc.testnet.immutable.com
+IMX_ZKEVM_TESTNET_SUBGRAPH_URL = '<SUBGRAPH_URL>' # Optional custom subgraph URL
+```
+
+If not specified, the router will use the default IMX testnet RPC and subgraph endpoints.
 
 Then from the root directory you can execute the CLI.
 
