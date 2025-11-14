@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## Unreleased
+
+### Features
+
+- Add V3 support for IMX zkEVM Testnet (Chain ID 13473)
+
 ### [3.6.0](https://github.com/Uniswap/smart-order-router/compare/v3.5.0...v3.6.0) (2023-02-24)
 
 ### [3.0.1](https://github.com/Uniswap/smart-order-router/compare/v2.10.2...v3.0.1) (2022-11-20)

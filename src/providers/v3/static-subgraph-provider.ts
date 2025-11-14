@@ -5,7 +5,7 @@ import JSBI from 'jsbi';
 import _ from 'lodash';
 
 import { unparseFeeAmount } from '../../util/amounts';
-import { WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
+import { IMX_ZKEVM_TESTNET, WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
 import { log } from '../../util/log';
 import { ProviderConfig } from '../provider';
 import {
@@ -69,11 +69,14 @@ import {
   WBTC_OPTIMISM,
   WBTC_OPTIMISM_GOERLI,
   WBTC_WORLDCHAIN,
+  WETH_IMX_ZKEVM_TESTNET,
   WETH_POLYGON,
   WLD_WORLDCHAIN,
   WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
   WSTETH_MAINNET,
+  WTIMX_IMX_ZKEVM_TESTNET,
+  USDC_IMX_ZKEVM_TESTNET,
   WXDAI_GNOSIS,
 } from '../token-provider';
 
@@ -210,6 +213,11 @@ const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
     USDC_BASE_SEPOLIA,
   ],
   [ChainId.SONEIUM]: [WRAPPED_NATIVE_CURRENCY[ChainId.SONEIUM]!, USDC_SONEIUM],
+  [IMX_ZKEVM_TESTNET]: [
+    WTIMX_IMX_ZKEVM_TESTNET,
+    WETH_IMX_ZKEVM_TESTNET,
+    USDC_IMX_ZKEVM_TESTNET,
+  ],
 };
 
 /**

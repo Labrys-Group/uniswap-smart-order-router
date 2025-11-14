@@ -26,12 +26,15 @@ import {
   USDT_MAINNET,
   USDT_MONAD_TESTNET,
   WBTC_MAINNET,
+  WETH_IMX_ZKEVM_TESTNET,
+  WTIMX_IMX_ZKEVM_TESTNET,
+  USDC_IMX_ZKEVM_TESTNET,
   WBTC_WORLDCHAIN,
   WLD_WORLDCHAIN,
   WMATIC_POLYGON,
   WMATIC_POLYGON_MUMBAI,
 } from '../../providers/token-provider';
-import { WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
+import { IMX_ZKEVM_TESTNET, WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
 
 type ChainTokenList = {
   readonly [chainId in ChainId]: Token[];
@@ -121,6 +124,11 @@ export const BASES_TO_CHECK_TRADES_AGAINST = (
     [ChainId.SONEIUM]: [
       WRAPPED_NATIVE_CURRENCY[ChainId.SONEIUM]!,
       USDC_SONEIUM,
+    ],
+    [IMX_ZKEVM_TESTNET]: [
+      WTIMX_IMX_ZKEVM_TESTNET,
+      WETH_IMX_ZKEVM_TESTNET,
+      USDC_IMX_ZKEVM_TESTNET,
     ],
   };
 };
