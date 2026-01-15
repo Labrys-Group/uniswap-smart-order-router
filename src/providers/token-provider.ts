@@ -756,6 +756,15 @@ export const USDC_MONAD = new Token(
   'USDC'
 );
 
+// IMX zkEVM Testnet (Chain ID 13473)
+export const STBL_IMX_ZKEVM_TESTNET = new Token(
+  13473 as ChainId,
+  '0x60d7778daA2487B8bdD54A7B6Eabd1f3fb2Bc4Ca',
+  18,
+  'STBL',
+  'Test Stablecoin'
+);
+
 export const WLD_WORLDCHAIN = new Token(
   ChainId.WORLDCHAIN,
   '0x2cFc85d8E48F8EAB294be644d9E25C3030863003',

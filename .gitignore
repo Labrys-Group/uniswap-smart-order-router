@@ -13,3 +13,4 @@ types/*
 .env
 cache/
 CLAUDE.md
+.npmrc
