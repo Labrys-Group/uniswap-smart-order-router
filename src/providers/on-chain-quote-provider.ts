@@ -597,15 +597,25 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
         }),
       };
     } else {
-      return await this.multicall2Provider.callSameFunctionOnContractWithMultipleParams<
+      const quoterAddress = this.getQuoterAddress(
+        useMixedRouteQuoter,
+        mixedRouteContainsV4Pool,
+        protocol
+      );
+
+      log.info({
+        quoterAddress,
+        protocol,
+        functionName,
+        numInputs: inputs.length,
+        inputs: inputs.map((inp, idx) => ({ idx, input: JSON.stringify(inp) })),
+      }, `[DEBUG] consolidateResults calling quoter`);
+
+      const result = await this.multicall2Provider.callSameFunctionOnContractWithMultipleParams<
         [string, string],
         [BigNumber, BigNumber[], number[], BigNumber] // amountIn/amountOut, sqrtPriceX96AfterList, initializedTicksCrossedList, gasEstimate
       >({
-        address: this.getQuoterAddress(
-          useMixedRouteQuoter,
-          mixedRouteContainsV4Pool,
-          protocol
-        ),
+        address: quoterAddress,
         contractInterface: this.getContractInterface(
           useMixedRouteQuoter,
           mixedRouteContainsV4Pool,
@@ -618,6 +628,22 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
           gasLimitPerCallOverride: gasLimitOverride,
         },
       });
+
+      log.info({
+        blockNumber: result.blockNumber.toString(),
+        numResults: result.results.length,
+        approxGasUsedPerSuccessCall: result.approxGasUsedPerSuccessCall,
+        results: result.results.map((r, idx) => ({
+          idx,
+          success: r.success,
+          result: r.success ? {
+            amountOut: r.result[0]?.toString(),
+            gasEstimate: r.result[3]?.toString(),
+          } : null,
+        })),
+      }, `[DEBUG] consolidateResults got response`);
+
+      return result;
     }
   }
 
@@ -627,6 +653,15 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
     functionName: 'quoteExactInput' | 'quoteExactOutput',
     _providerConfig?: ProviderConfig
   ): Promise<OnChainQuotes<TRoute>> {
+    log.info({
+      numAmounts: amounts.length,
+      numRoutes: routes.length,
+      functionName,
+      chainId: this.chainId,
+      amounts: amounts.map(a => ({ currency: a.currency.symbol, amount: a.quotient.toString() })),
+      routes: routes.map(r => ({ protocol: r.protocol, path: routeToString(r) })),
+    }, `[DEBUG] getQuotesManyData called`);
+
     const useMixedRouteQuoter =
       routes.some((route) => route.protocol === Protocol.V2) ||
       routes.some((route) => route.protocol === Protocol.MIXED);
@@ -850,6 +885,14 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
               } catch (err: any) {
                 // Error from providers have huge messages that include all the calldata and fill the logs.
                 // Catch them and rethrow with shorter message.
+                log.error({
+                  errorName: err.name,
+                  errorMessage: err.message?.slice(0, 500),
+                  errorCode: err.code,
+                  idx,
+                  numInputs: inputs.length,
+                }, `[DEBUG] consolidateResults threw an error`);
+
                 if (err.message.includes('header not found')) {
                   return {
                     status: 'failed',
@@ -1125,6 +1168,36 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
           successfulQuoteStates,
           (quoteState) => quoteState.results
         );
+
+        log.info({
+          numSuccessfulQuoteStates: successfulQuoteStates.length,
+          numFailedQuoteStates: failedQuoteStates.length,
+          numCallResults: callResults.length,
+          callResultsHasData: callResults.length > 0,
+          firstCallResult: callResults[0] ? {
+            blockNumber: callResults[0].blockNumber?.toString(),
+            numResults: callResults[0].results?.length,
+            approxGasUsed: callResults[0].approxGasUsedPerSuccessCall,
+          } : 'NO_RESULTS',
+        }, `[DEBUG] About to return from retry - checking callResults`);
+
+        if (callResults.length === 0) {
+          log.error({
+            successfulQuoteStates: successfulQuoteStates.length,
+            failedQuoteStates: failedQuoteStates.length,
+            failedReasons: failedQuoteStates.map(f => ({
+              reason: f.reason?.name,
+              message: f.reason?.message?.slice(0, 200),
+            })),
+          }, `[DEBUG] CRITICAL: No successful quote states! This will cause blockNumber error`);
+
+          // Return empty results instead of crashing
+          return {
+            results: [],
+            blockNumber: BigNumber.from(0),
+            approxGasUsedPerSuccessCall: 0,
+          };
+        }
 
         return {
           results: _.flatMap(callResults, (result) => result.results),
@@ -1565,6 +1638,21 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
       optimisticCachedRoutes,
       protocol
     );
+
+    log.info({
+      numResults,
+      numSuccessResults,
+      successRate,
+      quoteMinSuccessRate,
+      haveRetriedForSuccessRate,
+      protocol,
+      failedResults: allResults.filter(r => !r.success).map((r, idx) => ({
+        idx,
+        success: r.success,
+        returnData: (r as any).returnData?.slice(0, 100),
+      })),
+    }, `[DEBUG] validateSuccessRate check`);
+
     if (successRate < quoteMinSuccessRate) {
       if (haveRetriedForSuccessRate) {
         log.info(
