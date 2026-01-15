@@ -6,6 +6,10 @@ import {
   FailureOverrides,
   QuoteRetryOptions,
 } from '../providers';
+import { IMX_ZKEVM_TESTNET } from './chains';
+
+// Custom chains not in sdk-core that need quote provider config
+const ADDITIONAL_CUSTOM_CHAINS: ChainId[] = [IMX_ZKEVM_TESTNET];
 
 export const NETWORKS_WITH_SAME_RETRY_OPTIONS = Object.values(
   ChainId
@@ -30,7 +34,7 @@ export const DEFAULT_RETRY_OPTIONS: QuoteRetryOptions = {
 };
 
 export const RETRY_OPTIONS = {
-  ...constructSameRetryOptionsMap(DEFAULT_RETRY_OPTIONS),
+  ...constructSameRetryOptionsMap(DEFAULT_RETRY_OPTIONS, ADDITIONAL_CUSTOM_CHAINS),
 };
 
 export const NETWORKS_WITH_SAME_BATCH_PARAMS = Object.values(
@@ -56,7 +60,7 @@ export const DEFAULT_BATCH_PARAMS: BatchParams = {
 };
 
 export const BATCH_PARAMS = {
-  ...constructSameBatchParamsMap(DEFAULT_BATCH_PARAMS),
+  ...constructSameBatchParamsMap(DEFAULT_BATCH_PARAMS, ADDITIONAL_CUSTOM_CHAINS),
 };
 
 export const NETWORKS_WITH_SAME_GAS_ERROR_FAILURE_OVERRIDES = Object.values(
@@ -86,7 +90,8 @@ export const DEFAULT_GAS_ERROR_FAILURE_OVERRIDES: FailureOverrides = {
 
 export const GAS_ERROR_FAILURE_OVERRIDES = {
   ...constructSameGasErrorFailureOverridesMap(
-    DEFAULT_GAS_ERROR_FAILURE_OVERRIDES
+    DEFAULT_GAS_ERROR_FAILURE_OVERRIDES,
+    ADDITIONAL_CUSTOM_CHAINS
   ),
 };
 
@@ -117,7 +122,8 @@ export const DEFAULT_SUCCESS_RATE_FAILURE_OVERRIDES: FailureOverrides = {
 
 export const SUCCESS_RATE_FAILURE_OVERRIDES = {
   ...constructSameSuccessRateFailureOverridesMap(
-    DEFAULT_SUCCESS_RATE_FAILURE_OVERRIDES
+    DEFAULT_SUCCESS_RATE_FAILURE_OVERRIDES,
+    ADDITIONAL_CUSTOM_CHAINS
   ),
 };
 
@@ -145,5 +151,5 @@ export const DEFAULT_BLOCK_NUMBER_CONFIGS: BlockNumberConfig = {
 };
 
 export const BLOCK_NUMBER_CONFIGS = {
-  ...constructSameBlockNumberConfigsMap(DEFAULT_BLOCK_NUMBER_CONFIGS),
+  ...constructSameBlockNumberConfigsMap(DEFAULT_BLOCK_NUMBER_CONFIGS, ADDITIONAL_CUSTOM_CHAINS),
 };
