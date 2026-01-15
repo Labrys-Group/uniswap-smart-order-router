@@ -603,7 +603,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
         protocol
       );
 
-      log.info({
+      log.error({
         quoterAddress,
         protocol,
         functionName,
@@ -629,7 +629,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
         },
       });
 
-      log.info({
+      log.error({
         blockNumber: result.blockNumber.toString(),
         numResults: result.results.length,
         approxGasUsedPerSuccessCall: result.approxGasUsedPerSuccessCall,
@@ -653,7 +653,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
     functionName: 'quoteExactInput' | 'quoteExactOutput',
     _providerConfig?: ProviderConfig
   ): Promise<OnChainQuotes<TRoute>> {
-    log.info({
+    log.error({
       numAmounts: amounts.length,
       numRoutes: routes.length,
       functionName,
@@ -763,6 +763,15 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
         };
       }
     );
+
+    log.error({
+      inputsLength: inputs.length,
+      normalizedChunk,
+      multicallChunk,
+      inputsChunkedLength: inputsChunked.length,
+      quoteStatesLength: quoteStates.length,
+      firstInput: inputs[0] ? JSON.stringify(inputs[0]) : 'NO_INPUTS',
+    }, `[DEBUG] Created quoteStates before retry loop`);
 
     log.info(
       `About to get ${
@@ -1169,7 +1178,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
           (quoteState) => quoteState.results
         );
 
-        log.info({
+        log.error({
           numSuccessfulQuoteStates: successfulQuoteStates.length,
           numFailedQuoteStates: failedQuoteStates.length,
           numCallResults: callResults.length,
@@ -1639,7 +1648,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
       protocol
     );
 
-    log.info({
+    log.error({
       numResults,
       numSuccessResults,
       successRate,
