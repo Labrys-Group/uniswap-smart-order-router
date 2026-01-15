@@ -222,6 +222,10 @@ export const UNISWAP_MULTICALL_ADDRESSES: AddressMap = {
 };
 
 export const SWAP_ROUTER_02_ADDRESSES = (chainId: number): string => {
+  // Custom chains not in sdk-core
+  if (chainId === IMX_ZKEVM_TESTNET) {
+    return '0x4FCfc754A35ECb95625Ec38dc4243017FD18d52D';
+  }
   return (
     SWAP_ROUTER_02_ADDRESSES_HELPER(chainId) ??
     '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'
