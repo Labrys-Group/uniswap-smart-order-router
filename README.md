@@ -174,7 +174,6 @@ Total ticks crossed: 7
 ./bin/cli quote --tokenIn 0x7F5c764cBc14f9669B88837ca1490cCa17c31607 --tokenOut 0x4200000000000000000000000000000000000042 --amount 1 --exactIn --minSplits 1 --protocols v2 --router alpha --chainId 10
 ```
 
-
 ## Optimism-Goerli
 
 ```
@@ -272,6 +271,7 @@ Total ticks crossed: 7
 ```
 
 ## Monad Mainnet
+
 ```
 ./bin/cli quote --tokenIn 0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A --tokenOut 0x754704Bc059F8C67012fEd69BC8A327a5aafb603 --amount 0.1 --exactIn --minSplits 1 --protocols v2 --router alpha --chainId 143
 ```
@@ -323,3 +323,204 @@ This total amount of gas each `eth_call` can consume is equal to the `multicallC
 If you are running your own node, we recommend you configure start your node with a higher gas limit per call. For example, on Geth you can use the command line argument `--rpc.gascap 150000000` to raise the limit to 150m, which is enough to run the default configuration of this package.
 
 If you are using Hardhat mainnet forking, you should add `blockGasLimit: 150_000_000` to your Hardhat config to use the default package configuration.
+
+# Smart Order Router - New Chain Support Checklist
+
+This document outlines all the changes required to add support for a new chain in the smart-order-router.
+
+## 1. `src/util/chains.ts` - Chain Definition
+
+```typescript
+// Define chain ID constant (since not in sdk-core)
+export const MY_NEW_CHAIN = 12345 as ChainId;
+
+// Add to SUPPORTED_CHAINS array
+export const SUPPORTED_CHAINS: ChainId[] = [
+  // ... existing chains
+  MY_NEW_CHAIN,
+];
+
+// Add ChainName enum entry
+export enum ChainName {
+  // ... existing entries
+  MY_NEW_CHAIN = 'my-new-chain',
+}
+
+// Add to ID_TO_CHAIN_ID() function
+case 12345:
+  return MY_NEW_CHAIN;
+
+// Add to ID_TO_CHAIN_NAME() function
+case 12345:
+  return ChainName.MY_NEW_CHAIN;
+
+// Add to BASE_TOKENS map (tokens used for routing)
+[MY_NEW_CHAIN]: [WRAPPED_NATIVE_CURRENCY[MY_NEW_CHAIN]!],
+
+// Add to NATIVE_NAMES_BY_ID map
+[MY_NEW_CHAIN]: NativeCurrencyName.ETHER, // or appropriate native currency
+
+// Add RPC URL in getApplicableChainIdsRpcUrl()
+case MY_NEW_CHAIN:
+  return process.env.JSON_RPC_PROVIDER_MY_NEW_CHAIN || 'https://rpc.example.com';
+```
+
+## 2. `src/util/addresses.ts` - Contract Addresses
+
+```typescript
+// V3 Factory
+V3_CORE_FACTORY_ADDRESSES: {
+  [MY_NEW_CHAIN]: '0x...',
+}
+
+// Quoter V2
+QUOTER_V2_ADDRESSES: {
+  [MY_NEW_CHAIN]: '0x...',
+}
+
+// New Quoter V2 (same as above for V3-only chains)
+NEW_QUOTER_V2_ADDRESSES: {
+  [MY_NEW_CHAIN]: '0x...',
+}
+
+// Multicall
+UNISWAP_MULTICALL_ADDRESSES: {
+  [MY_NEW_CHAIN]: '0x...',
+}
+
+// SwapRouter02 (function override for custom chains not in sdk-core)
+export const SWAP_ROUTER_02_ADDRESSES = (chainId: number): string => {
+  if (chainId === MY_NEW_CHAIN) {
+    return '0x...'; // Your SwapRouter02 address
+  }
+  return (
+    SWAP_ROUTER_02_ADDRESSES_HELPER(chainId) ??
+    '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'
+  );
+};
+
+// WETH9 (wrapped native token)
+WETH9: {
+  [MY_NEW_CHAIN]: new Token(
+    12345,
+    '0x...', // WETH address
+    18,
+    'WETH',
+    'Wrapped Ether'
+  ),
+}
+```
+
+## 3. `src/util/onchainQuoteProviderConfigs.ts` - Quote Provider Config
+
+```typescript
+import { MY_NEW_CHAIN } from './chains';
+
+// Add chain to ADDITIONAL_CUSTOM_CHAINS array
+const ADDITIONAL_CUSTOM_CHAINS: ChainId[] = [MY_NEW_CHAIN];
+
+// The chain will automatically be added to all config maps:
+// - RETRY_OPTIONS
+// - BATCH_PARAMS
+// - GAS_ERROR_FAILURE_OVERRIDES
+// - SUCCESS_RATE_FAILURE_OVERRIDES
+// - BLOCK_NUMBER_CONFIGS
+```
+
+## 4. `src/providers/token-provider.ts` - Stablecoin Definition
+
+```typescript
+// Define a stablecoin for gas estimation (USDC, USDT, or similar)
+export const USDC_MY_NEW_CHAIN = new Token(
+  12345 as ChainId,
+  '0x...', // Stablecoin address
+  6, // Decimals (usually 6 for USDC)
+  'USDC',
+  'USD Coin'
+);
+```
+
+## 5. `src/routers/alpha-router/gas-models/gas-model.ts` - USD Gas Tokens
+
+```typescript
+import { USDC_MY_NEW_CHAIN } from '../../../providers/token-provider';
+
+// Add stablecoin for gas cost estimation
+export const usdGasTokensByChain: { [chainId in ChainId]?: Token[] } = {
+  // ... existing entries
+  [12345 as ChainId]: [USDC_MY_NEW_CHAIN],
+};
+```
+
+## 6. `src/routers/legacy-router/bases.ts` - Base Tokens for Routing
+
+```typescript
+// Add base tokens used in routing paths
+BASES_TO_CHECK_TRADES_AGAINST: {
+  [MY_NEW_CHAIN]: [
+    WRAPPED_NATIVE_CURRENCY[MY_NEW_CHAIN]!,
+    USDC_MY_NEW_CHAIN,
+    // Add other common tokens
+  ],
+}
+```
+
+## 7. `src/providers/v3/static-subgraph-provider.ts` - Pool Discovery
+
+```typescript
+// Add base tokens for static subgraph provider (used when no subgraph available)
+BASES_TO_CHECK_TRADES_AGAINST: {
+  [MY_NEW_CHAIN]: [
+    WRAPPED_NATIVE_CURRENCY[MY_NEW_CHAIN]!,
+    USDC_MY_NEW_CHAIN,
+  ],
+}
+```
+
+## 8. `src/routers/alpha-router/gas-models/gas-costs.ts` - Gas Costs
+
+```typescript
+// Add gas cost constants for your chain (can copy from similar chain)
+BASE_SWAP_COST(chainId); // Base cost for a swap
+COST_PER_INIT_TICK(chainId); // Cost per initialized tick crossed
+COST_PER_HOP(chainId); // Cost per hop in multi-hop route
+SINGLE_HOP_OVERHEAD(chainId); // Overhead for single-hop swaps
+```
+
+## 9. `src/util/defaultBlocksToLive.ts` - Cache TTL
+
+```typescript
+// Add blocks-to-live for route caching
+[MY_NEW_CHAIN]: 2, // Number of blocks before cached routes expire
+```
+
+---
+
+## Summary
+
+For a custom chain not in `@uniswap/sdk-core`, you need to:
+
+1. **Define the chain ID** as a constant cast to `ChainId`
+2. **Add to supported chains** array
+3. **Configure all contract addresses:**
+   - V3 Factory
+   - Quoter V2
+   - Multicall
+   - SwapRouter02
+   - WETH9 (wrapped native token)
+4. **Add quote provider configs** (retry options, batch params, failure overrides)
+5. **Define a stablecoin** for gas estimation
+6. **Add to `usdGasTokensByChain`** for gas cost calculations
+7. **Configure base tokens** for routing in legacy-router and static-subgraph-provider
+
+## Required Contract Deployments
+
+Before adding chain support, ensure these contracts are deployed:
+
+| Contract         | Purpose                   |
+| ---------------- | ------------------------- |
+| UniswapV3Factory | Creates V3 pools          |
+| QuoterV2         | On-chain quote simulation |
+| SwapRouter02     | Executes swaps            |
+| Multicall3       | Batches RPC calls         |
+| WETH9            | Wrapped native token      |
